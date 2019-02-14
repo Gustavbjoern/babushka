@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babushka popup</title>
+    <link rel="stylesheet" href="https://use.typekit.net/rij8eyl.css">
+
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #55AACB;
+        }
+
+
+        #skriv {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+
+        }
+
+        .enkelt {
+            background-color: #EEBD8B;
+
+            font-size: 30px;
+            text-align: center;
+        }
+
+        @media(min-width:700px) {
+            #skriv {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+
+                grid-gap: 1vw;
+            }
+        }
+
+        @media(min-width:1200px) {
+            #skriv {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+
+                grid-gap: 1vw;
+            }
+        }
+
+        .menu {
+            text-align: center;
+            background-color: #EEBD8B;
+        }
+
+        .menu img {
+            width: 100%;
+        }
+
+        h1,
+        h2,
+        h3 {
+            text-align: center;
+            font-family: archivo-black, sans-serif;
+            font-style: normal;
+            color: #EE5533;
+        }
+
+        p {
+            color: #F2E8DB;
+        }
+
+        .valgt {
+            background-color: #EE5533;
+        }
+
+        #popup {
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            background-color: hsla(0, 15%, 48%, 0.5);
+            overflow: scroll;
+            display: none;
+        }
+
+        #popup img {
+            width: 50%;
+        }
+
+        #indhold {
+            min-height: 50vh;
+            background-color: #EEBD8B;
+            width: 50vw;
+            margin: 4rem auto;
+            border-radius: 15px;
+            display: flex;
+
+
+        }
+
+        #luk {
+            position: fixed;
+            right: 2rem;
+            padding-right: 2rem;
+        }
+
+        #luk button {
+            font-size: 2rem;
+            padding: 1rem 2rem;
+            cursor: pointer;
+        }
+
+        .filter {
+            background-color: #EE5533;
+            border-radius: 20%;
+            border: none;
+            color: #F2E8DB;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+
+        }
+
+        .nav {
+            background-color: #EE5533;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+    <div id="popup">
+        <div id="luk">
+            <button> X </button>
+            <div id="indhold"></div>
+        </div>
+    </div>
+
+    <header class="menu">
+        <img src="babushka.jpg" alt="splashimage">
+        <h1>Alle retter</h1>
+        <nav class="nav">
+            <button class="filter valgt" data-ret="alle">Alle retter</button>
+            <button class="filter" data-ret="forretter">Forretter</button>
+            <button class="filter" data-ret="hovedretter">Hovedretter</button>
+            <button class="filter" data-ret="desserter">Desserter</button>
+            <button class="filter" data-ret="drikkevarer">Drikkevarer</button>
+            <button class="filter" data-ret="sideorders">Sideorders</button>
+        </nav>
+    </header>
+    <main>
+        <section id="skriv">
+
+
+        </section>
+    </main>
+    <footer></footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", hentJson);
+        // tomt array
+        let ret = [];
+        let filter = "alle";
+        let dest = document.querySelector("#skriv");
+        async function hentJson() {
+            let myJson = await fetch("https://mandalskeawebspace.dk/claude_php/clean_up_spreadsheet.php?id=1jxxxFoWBuMJ1qhQ9BQIAyKHmP38XtAF9_sQr0xo5JLo");
+            ret = await myJson.json();
+            udMedret();
+        }
+
+        function udMedret() {
+            dest.innerHTML = "";
+            ret.forEach(ret => {
+                if (filter == "alle" || filter == ret.kategori) {
+                    let template =
+                        `<article class="enkelt"> <h3>${ret.navn}</h3><p> ${ret.kategori}</p><p>${ret.kort}</p><p>Oprindelse: ${ret.oprindelse}</p></br><img src="imgs/small/${ret.billede}-sm.jpg" alt="${ret.navn}"> <p>Pris: ${ret.pris}.-</p> </article>`;
+                    // insertAdjecentHTML kan bruges sammen med eventlistener
+                    dest.insertAdjacentHTML("beforeend", template);
+                    dest.lastElementChild.addEventListener("click", () => {
+                        visSingle(ret);
+                    });
+                }
+            });
+        }
+
+        function visSingle(ret) {
+            document.querySelector("#indhold").innerHTML = `<article class="person"> <h2>${ret.navn}</h2><img src="imgs/large/${ret.billede}.jpg" alt="${ret.navn}"><p>Pris: ${ret.pris},-</p> <p>Beskrivelse: ${ret.lang}</p></article>`;
+            document.querySelector("#popup").style.display = "block";
+            document.querySelector("#popup #luk").addEventListener("click", close);
+        }
+
+        function close() {
+            document.querySelector("#popup").style.display = "none";
+        }
+        document.querySelectorAll(".filter").forEach(elm => {
+            elm.addEventListener("click", filterKat);
+        });
+
+        function filterKat() {
+            filter = this.getAttribute("data-ret");
+            document.querySelector("h1").textContent = this.textContent;
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.classList.remove("valgt");
+            });
+            this.classList.add("valgt");
+            udMedret();
+        }
+
+    </script>
+
+</body>
+
+</html>
